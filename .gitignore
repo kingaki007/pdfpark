@@ -1,0 +1,33 @@
+.setup/
+.pnpm-store/
+.pnpm-cache/
+.cache/
+.data/
+.config/
+.local/
+.appdata/
+.npm-cache/
+.pnpm/
+work/
+**/node_modules/
+**/dist/
+**/public/pdf-assets/
+**/*.tsbuildinfo
+**/.env*
+!**/.env.example
+**/.wrangler/
+**/.DS_Store
+
+# Python caches and local environments
+**/__pycache__/
+*.py[cod]
+**/.pytest_cache/
+**/.venv/
+**/venv/
+**/.coverage
+**/htmlcov/
+
+# Local credentials and logs
+*.pem
+*.key
+*.log
