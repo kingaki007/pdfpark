@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+
 import {
     useCallback,
     useEffect,
@@ -154,6 +154,24 @@ export default function Home() {
               }
             : page;
     const size = page ? displaySize(page) : { width: 612, height: 792 };
+    const pageScroll = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const container = pageScroll.current;
+        if (!container) return;
+        let previousWidth = 0;
+        const observer = new ResizeObserver(() => {
+            const width = container.clientWidth;
+            if (width === previousWidth) return;
+            previousWidth = width;
+            if (window.matchMedia('(max-width: 800px)').matches) {
+                const style = getComputedStyle(container);
+                const available = width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+                setZoom(Math.max(0.1, Math.min(1, available / size.width)));
+            }
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [page?.id, size.width]);
     const change = useCallback(
         (next: DocumentState | ((doc: DocumentState) => DocumentState)) =>
             setHistory((h) =>
@@ -802,7 +820,7 @@ export default function Home() {
                     )}
                 </div>
             )}
-            <div className="workspace">
+            <div className={"workspace" + (page ? " has-document" : "")}>
                 <aside className="pages-panel">
                     <div className="panel-heading">
                         <strong>Pages</strong>
@@ -1055,7 +1073,7 @@ export default function Home() {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="page-scroll">
+                            <div className="page-scroll" ref={pageScroll}>
                                 <div
                                     className="paper"
                                     style={{
@@ -1387,9 +1405,9 @@ export default function Home() {
                         ? checked.length + " pages selected for export"
                         : "PDF Park · Browser editor"}
                 </span>
-                <Link href="/tools.html">
+                <a href="/tools.html">
                     PDF tools &amp; supported formats
-                </Link>
+                </a>
                 <a href="mailto:admin@pdfpark.in">
                     Contact us: admin@pdfpark.in
                 </a>

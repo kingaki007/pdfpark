@@ -50,26 +50,20 @@ def test_conversion_api_rejects_invalid_formats_and_empty_files():
         assert client.post('/api/convert?source=pdf&target=docx', content=b'').status_code == 422
 
 
-def test_office_pdf_route(monkeypatch):
+def test_office_pdf_route():
+    import io
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     import conversion
-    calls = []
-    class Process:
-        returncode = 0
-        async def wait(self):
-            return 0
-    async def launch(*args, **kwargs):
-        calls.append(args)
-        root = Path(args[args.index('--outdir') + 1])
-        (root / 'input.pdf').write_bytes(b'%PDF-1.7 test')
-        return Process()
-    monkeypatch.setattr(conversion.asyncio, 'create_subprocess_exec', launch)
+    document = Document()
+    document.add_paragraph('PDF Park ARM conversion check')
+    source = io.BytesIO()
+    document.save(source)
     app = FastAPI()
     app.include_router(conversion.router)
     with TestClient(app) as client:
-        response = client.post('/api/convert?source=docx&target=pdf', content=b'office fixture')
+        response = client.post('/api/convert?source=docx&target=pdf', content=source.getvalue())
     assert response.status_code == 200
     assert response.headers['content-type'] == 'application/pdf'
-    assert calls[0][0] == 'libreoffice'
-    assert not Path(calls[0][-1]).exists()
+    with fitz.open(stream=response.content, filetype='pdf') as result:
+        assert 'PDF Park ARM conversion check' in ''.join(page.get_text() for page in result)

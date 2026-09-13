@@ -117,7 +117,7 @@ def test_real_ocr_download(clients):
     assert 'SEARCHABLE DOCUMENT 12345' in PdfReader(io.BytesIO(response.content)).pages[0].extract_text()
     assert second.get(f'/api/jobs/{job_id}/download').status_code == 404
     with connect() as db:
-        assert db.execute('SELECT input FROM jobs WHERE id=%s', (job_id,)).fetchone()['input'] is None
+        assert db.execute('SELECT input_path FROM jobs WHERE id=%s', (job_id,)).fetchone()['input_path'] is None
 
 
 def test_ocr_rejects_empty_document():

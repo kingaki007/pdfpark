@@ -193,3 +193,45 @@ input:not([type=checkbox]), textarea { border: 1px solid #cfd8e5; background: #f
 .line-editor legend { font-weight: 600; margin-bottom: 10px; }
 .line-editor .row { flex-wrap: wrap; }
 .line-editor select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; color: #182338; }
+
+/* Keep the editor usable with narrow viewports and touch keyboards. */
+.topbar { flex-wrap: wrap; flex-shrink: 0; }
+.topbar > .row { flex-wrap: wrap; }
+.workspace > *, .topbar > .row { min-width: 0; }
+[data-slot=dialog-content], [data-slot=alert-dialog-content] { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+@media (max-width: 800px) {
+  .topbar { gap: 12px; }
+  .topbar > .row { width: 100%; gap: 8px; }
+  .topbar [data-slot=button] { min-height: 44px; padding: 0 12px; }
+  .toolbar [data-slot=button], .canvas-controls [data-slot=button] { min-height: 44px; }
+}
+@media (max-width: 640px) {
+  .studio { height: auto; min-height: 100dvh; overflow: visible; }
+  .topbar { padding: 12px; }
+  .topbar > .row > [data-slot=button] { flex: 1 1 140px; }
+  .toolbar { max-width: 100%; padding: 8px 12px; }
+  .workspace { display: flex; flex-direction: column; flex: 1; }
+  .canvas-area { order: 0; min-height: 360px; }
+  .workspace.has-document .canvas-area { height: 65dvh; min-height: 360px; }
+  .pages-panel { order: 1; border: 0; border-top: 1px solid var(--border); }
+  .page-list { display: flex; gap: 10px; overflow-x: auto; padding: 12px; flex: none; }
+  .thumbnail { flex: 0 0 142px; margin: 0; padding: 8px; }
+  .thumbnail-label [data-slot=button] { width: 36px; height: 44px; }
+  .thumbnail-label label { min-height: 44px; }
+  .page-actions { flex-direction: row; flex-wrap: wrap; padding: 12px; }
+  .page-actions > * { flex: 1; min-height: 44px; }
+  .properties-panel { order: 2; max-height: none; overflow: visible; border-left: 0; }
+  .properties { flex-direction: column; }
+  .properties > * { width: 100%; max-width: none; }
+  .workspace:not(.has-document) .pages-panel,
+  .workspace:not(.has-document) .properties-panel { display: none; }
+  .canvas-controls { padding: 8px; gap: 4px 12px; }
+  .page-scroll { padding: 12px; min-height: 0; }
+  .paper { margin: 0 auto; }
+  .empty-workspace { padding: 28px 16px; width: 100%; }
+  .empty-workspace br { display: none; }
+  .statusbar { padding: 12px; overflow-wrap: anywhere; }
+  input:not([type=checkbox]), textarea, select { font-size: 16px; }
+  .signature-dialog { max-width: calc(100% - 2rem) !important; }
+  .ocr-dialog .row { flex-wrap: wrap; }
+}
