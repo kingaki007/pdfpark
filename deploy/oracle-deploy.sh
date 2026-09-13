@@ -8,7 +8,7 @@ flock -w 1200 9
 root=/home/ubuntu/pdfpark-releases
 mkdir -p "$root" /home/ubuntu/pdfpark-backups
 release=$(mktemp -d "$root/${sha}.XXXXXX")
-tar --extract --gzip --no-same-owner --no-same-permissions --directory "$release"
+tar --extract --gzip --no-same-owner --same-permissions --directory "$release"
 ln -s /home/ubuntu/pdfpark/.env "$release/.env"
 cd "$release"
 sudo -n docker compose -p pdfpark config --quiet
@@ -27,6 +27,7 @@ for service in web api worker; do
   sudo -n docker image tag "$image" "pdfpark-${service}:rollback"
 done
 sudo -n docker compose -p pdfpark -f compose.yaml -f release-images.yaml build > build.log 2>&1 || { tail -n 50 build.log; exit 1; }
+sudo -n docker compose -p pdfpark -f compose.yaml -f release-images.yaml run --rm --no-deps api python -c "import main, conversion, worker"
 sudo -n docker exec pdfpark-db-1 pg_dump -U pdfstudio -d pdfstudio | gzip > "/home/ubuntu/pdfpark-backups/${sha}-$(date +%s).sql.gz"
 cat > rollback.yaml <<'YAML'
 services:
