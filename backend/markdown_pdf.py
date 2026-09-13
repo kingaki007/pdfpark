@@ -1,4 +1,5 @@
 """Render Markdown without raw HTML or external image/resource loading."""
+
 import html
 from markdown_it import MarkdownIt
 
@@ -18,12 +19,13 @@ a { color: #185be8; }
 
 
 def render_markdown(text):
-    parser = MarkdownIt('commonmark', {'html': False}).enable('table')
+    parser = MarkdownIt("commonmark", {"html": False}).enable("table")
+
     # Never resolve remote resources or paths from an uploaded document.
     def image(tokens, index, options, env):
         token = tokens[index]
         label = parser.renderer.renderInlineAsText(token.children or [], options, env)
-        return '<span>[Image: ' + html.escape(label or 'image') + ']</span>'
-    parser.renderer.rules['image'] = image
-    return parser.render(text)
+        return "<span>[Image: " + html.escape(label or "image") + "]</span>"
 
+    parser.renderer.rules["image"] = image
+    return parser.render(text)
