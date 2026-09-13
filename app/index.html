@@ -1,2 +1,219 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="description" content="Edit and merge PDFs, add signatures, convert Word, Excel, PowerPoint, Markdown and images to PDF, unlock PDFs with a password, and create searchable PDFs with OCR."/><title>PDF Park | Edit, Merge, Convert, Sign &amp; OCR PDFs</title><link rel="icon" href="/icon.svg"/></head><body><div id="root"><h1>PDF Park: edit, merge and convert PDFs</h1><p>Edit PDF text, add signatures, combine pages, convert Office files, Markdown and images, unlock PDFs with a password, and run OCR.</p><p>Loading the editor. JavaScript is required to edit documents. <a href="/tools.html">Explore all PDF tools and supported formats</a>.</p></div><script type="module" src="/main.tsx"></script></body></html>
-
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Edit PDFs, make scanned PDFs searchable with OCR, export to DOC, JPG, MD, PNG, Excel and PPT, and convert DOC, DOCX, XLS, XLSX, PPT, PPTX, Markdown, text, JPG and PNG files to PDF."
+    />
+    <title>PDF Park | Edit, Search, Convert &amp; Export PDFs</title>
+    <link rel="icon" href="/icon.svg" />
+    <style>
+      #boot {
+        box-sizing: border-box;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px;
+        background: radial-gradient(ellipse at 50% 35%, #eaf1ff 0%, #f8faff 48%, #fff 80%);
+        font-family: Arial, sans-serif;
+        color: #182338;
+        text-align: center;
+      }
+      #boot * {
+        box-sizing: border-box;
+      }
+      .boot-inner {
+        width: 100%;
+        max-width: 380px;
+      }
+      .boot-art {
+        position: relative;
+        width: 104px;
+        height: 128px;
+        margin: 0 auto 32px;
+      }
+      .boot-sheet {
+        position: absolute;
+        inset: 8px 10px;
+        border: 1px solid #c9d9fa;
+        border-radius: 14px;
+        background: #edf3ff;
+        transform: rotate(-12deg);
+      }
+      .boot-sheet.back {
+        transform: rotate(10deg);
+        background: #dce8ff;
+      }
+      .boot-page {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(145deg, #fff, #f7faff);
+        border: 1px solid #d4e0f7;
+        border-radius: 14px;
+        box-shadow: 0 15px 35px #185be81c;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 24px 18px;
+        animation: boot-float 2.8s ease-in-out infinite;
+      }
+      .boot-page b {
+        font-size: 18px;
+        letter-spacing: 2px;
+        color: #185be8;
+        margin-bottom: 4px;
+      }
+      .boot-line {
+        height: 5px;
+        border-radius: 4px;
+        background: #d6e3fc;
+      }
+      .boot-line:last-child {
+        width: 65%;
+      }
+      .boot-spark {
+        position: absolute;
+        right: -17px;
+        top: 6px;
+        font-size: 28px;
+        color: #185be8;
+        animation: boot-float 2.8s ease-in-out infinite reverse;
+      }
+      #boot h1 {
+        font-size: 30px;
+        letter-spacing: -1px;
+        margin: 0 0 10px;
+      }
+      #boot p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #637087;
+        margin: 0;
+      }
+      .boot-track {
+        width: 160px;
+        height: 4px;
+        background: #e1e9f8;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 26px auto 16px;
+      }
+      .boot-track span {
+        display: block;
+        width: 45%;
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #76a5ff, #185be8);
+        animation: boot-slide 1.5s ease-in-out infinite;
+      }
+      .boot-status {
+        font-size: 13px;
+        color: #506580;
+      }
+      .boot-tools {
+        margin-top: 30px !important;
+        font-size: 12px !important;
+      }
+      .boot-tools a {
+        color: #185be8;
+        text-underline-offset: 3px;
+      }
+      .boot-help {
+        margin-top: 16px;
+        font-size: 12px;
+        color: #637087;
+      }
+      .boot-help summary {
+        cursor: pointer;
+      }
+      .boot-help a {
+        color: #185be8;
+      }
+      .boot-help p {
+        font-size: 12px !important;
+        padding-top: 8px;
+      }
+      @keyframes boot-float {
+        0%,
+        100% {
+          translate: 0 0;
+        }
+        50% {
+          translate: 0 -8px;
+        }
+      }
+      @keyframes boot-slide {
+        from {
+          transform: translateX(-110%);
+        }
+        to {
+          transform: translateX(330%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-page,
+        .boot-spark,
+        .boot-track span {
+          animation: none;
+        }
+        .boot-track span {
+          width: 100%;
+          opacity: 0.55;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <main id="boot">
+        <div class="boot-inner">
+          <div class="boot-art" aria-hidden="true">
+            <div class="boot-sheet back"></div>
+            <div class="boot-sheet"></div>
+            <div class="boot-page">
+              <b>PDF</b><span class="boot-line"></span><span class="boot-line"></span
+              ><span class="boot-line"></span>
+            </div>
+            <span class="boot-spark">✦</span>
+          </div>
+          <h1>PDF Park</h1>
+          <p>Your documents. A world of possibilities.</p>
+          <div class="boot-track" aria-hidden="true">
+            <span></span>
+          </div>
+          <div class="boot-status" role="status">Getting your editor ready…</div>
+          <p class="boot-tools">Edit · Merge · Convert · Sign</p>
+          <details class="boot-help">
+            <summary>Taking longer than expected?</summary>
+            <p>
+              Check your connection and
+              <a href="/">reload the editor</a>, or
+              <a href="/tools.html">explore supported PDF tools</a>.
+            </p>
+          </details>
+          <noscript
+            ><p style="margin-top: 20px">
+              Enable JavaScript to use the editor. You can still
+              <a href="/tools.html">browse our PDF tools</a>.
+            </p>
+            <style>
+              .boot-status,
+              .boot-track {
+                display: none;
+              }
+              .boot-page,
+              .boot-spark {
+                animation: none;
+              }
+            </style></noscript
+          >
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

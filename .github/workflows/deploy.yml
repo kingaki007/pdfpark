@@ -1,0 +1,46 @@
+name: Deploy PDF Park
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pdfpark-production
+  cancel-in-progress: false
+jobs:
+  verify-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and check frontend
+        run: |
+          docker build --target build --build-arg SITE_URL=https://pdfpark.in -t pdfpark-frontend-check .
+          docker run --rm pdfpark-frontend-check pnpm lint
+          docker run --rm pdfpark-frontend-check pnpm test
+      - name: Build and test backend
+        run: |
+          docker build -f backend/Dockerfile --target worker -t pdfpark-backend-check .
+          docker network create pdfpark-tests
+          PASSWORD=$(openssl rand -hex 24)
+          echo "::add-mask::$PASSWORD"
+          docker run -d --name pdfpark-test-db --network pdfpark-tests -e POSTGRES_PASSWORD="$PASSWORD" -e POSTGRES_USER=pdfstudio -e POSTGRES_DB=pdfstudio postgres:17-alpine
+          for attempt in $(seq 1 30); do
+            if docker exec pdfpark-test-db pg_isready -U pdfstudio -d pdfstudio; then break; fi
+            sleep 2
+          done
+          docker run --rm --network pdfpark-tests -e DATABASE_URL="postgresql://pdfstudio:$PASSWORD@pdfpark-test-db:5432/pdfstudio" -e DOCUMENT_STORAGE_DIR=/tmp/documents pdfpark-backend-check python -m pytest -q -p no:cacheprovider --tb=short
+      - name: Deploy checked source to Oracle
+        env:
+          DEPLOY_KEY: ${{ secrets.ORACLE_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.ORACLE_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/pdfpark-deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          git archive --format=tar.gz HEAD > "$RUNNER_TEMP/pdfpark.tar.gz"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=20 -i ~/.ssh/pdfpark-deploy ubuntu@80.225.255.216 "$GITHUB_SHA" < "$RUNNER_TEMP/pdfpark.tar.gz"
+      - name: Check public endpoint
+        run: curl --fail --retry 5 --retry-delay 5 https://pdfpark.in/api/healthz
