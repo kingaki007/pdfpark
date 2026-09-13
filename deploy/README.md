@@ -14,8 +14,8 @@ To inspect production:
 
 ```bash
 cd /home/ubuntu/pdfpark-current
-sudo docker compose -p pdfpark ps
-sudo docker compose -p pdfpark logs --tail=80 api worker web
+sudo docker compose -p pdfpark -f compose.yaml -f release-images.yaml ps
+sudo docker compose -p pdfpark -f compose.yaml -f release-images.yaml logs --tail=80 api worker web
 ```
 
 To change the deployment script, review `deploy/oracle-deploy.sh` and install it on Oracle as `/home/ubuntu/bin/pdfpark-deploy` with mode 700. It is not overwritten automatically by application deployments.

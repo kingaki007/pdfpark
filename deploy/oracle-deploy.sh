@@ -12,13 +12,21 @@ tar --extract --gzip --no-same-owner --no-same-permissions --directory "$release
 ln -s /home/ubuntu/pdfpark/.env "$release/.env"
 cd "$release"
 sudo -n docker compose -p pdfpark config --quiet
-# Build completely before replacing any running service.
-sudo -n docker compose -p pdfpark build > build.log 2>&1 || { tail -n 50 build.log; exit 1; }
-# Save exact running image IDs, not the newly built image tags.
+# Keep each release under its own tags so rebuilding never removes a running image.
+cat > release-images.yaml <<YAML
+services:
+  web:
+    image: pdfpark-web:${sha}
+  api:
+    image: pdfpark-api:${sha}
+  worker:
+    image: pdfpark-worker:${sha}
+YAML
 for service in web api worker; do
-  image=$(sudo -n docker inspect --format '{{.Image}}' "pdfpark-${service}-1")
+  image=$(sudo -n docker inspect --format '{{.Config.Image}}' "pdfpark-${service}-1")
   sudo -n docker image tag "$image" "pdfpark-${service}:rollback"
 done
+sudo -n docker compose -p pdfpark -f compose.yaml -f release-images.yaml build > build.log 2>&1 || { tail -n 50 build.log; exit 1; }
 sudo -n docker exec pdfpark-db-1 pg_dump -U pdfstudio -d pdfstudio | gzip > "/home/ubuntu/pdfpark-backups/${sha}-$(date +%s).sql.gz"
 cat > rollback.yaml <<'YAML'
 services:
@@ -29,7 +37,7 @@ services:
   worker:
     image: pdfpark-worker:rollback
 YAML
-if ! sudo -n docker compose -p pdfpark up -d --no-deps --wait --wait-timeout 180 api worker web; then
+if ! sudo -n docker compose -p pdfpark -f compose.yaml -f release-images.yaml up -d --no-deps --wait --wait-timeout 180 api worker web; then
   echo 'Startup failed; restoring previous application images.'
   sudo -n docker compose -p pdfpark -f compose.yaml -f rollback.yaml up -d --no-deps --no-build --wait api worker web
   exit 1
