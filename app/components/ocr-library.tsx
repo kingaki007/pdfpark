@@ -1,46 +1,50 @@
-import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { api, type OcrJob } from "@/lib/server-api";
-import { parsePageRange, type EditorPage } from "@/lib/editor-model";
-import { download, exportPdf } from "@/lib/pdf-engine";
+} from '@/components/ui/dialog';
+import { api, type OcrJob } from '@/lib/server-api';
+import { parsePageRange, type EditorPage } from '@/lib/editor-model';
+import { download, exportPdf } from '@/lib/pdf-engine';
 
 export function OcrLibrary({
   pages,
   name,
   disabled,
+  initialOpen = false,
+  triggerLabel = 'Make Scanned PDF searchable',
 }: {
   pages: EditorPage[];
   name: string;
   disabled: boolean;
+  initialOpen?: boolean;
+  triggerLabel?: string;
 }) {
-  const [open, setOpen] = useState(false),
-    [email, setEmail] = useState("");
+  const [open, setOpen] = useState(initialOpen),
+    [email, setEmail] = useState('');
   const [account, setAccount] = useState<string | null>(null),
-    [password, setPassword] = useState("");
+    [password, setPassword] = useState('');
   const [register, setRegister] = useState(false),
     [jobs, setJobs] = useState<OcrJob[]>([]);
   const [busy, setBusy] = useState(false),
-    [checking, setChecking] = useState(false);
-  const [error, setError] = useState(""),
-    [notice, setNotice] = useState(""),
-    [range, setRange] = useState("");
+    [checking, setChecking] = useState(initialOpen);
+  const [error, setError] = useState(''),
+    [notice, setNotice] = useState(''),
+    [range, setRange] = useState('');
   const locked = useRef(false);
 
   async function refresh() {
-    setJobs((await (await api("/jobs")).json()) as OcrJob[]);
+    setJobs((await (await api('/jobs')).json()) as OcrJob[]);
   }
   useEffect(() => {
     if (!open) return;
     let disposed = false;
 
-    void fetch("/api/auth/me", { credentials: "same-origin" })
+    void fetch('/api/auth/me', { credentials: 'same-origin' })
       .then(async (response) => {
         if (response.status === 401) {
           if (!disposed) {
@@ -50,16 +54,19 @@ export function OcrLibrary({
           return;
         }
         if (!response.ok)
-          throw new Error("The OCR server is unavailable. Local editing still works.");
+          throw new Error(
+            'The OCR server is unavailable. Local editing still works.',
+          );
         const current = (await response.json()) as { email: string };
-        const library = (await (await api("/jobs")).json()) as OcrJob[];
+        const library = (await (await api('/jobs')).json()) as OcrJob[];
         if (!disposed) {
           setAccount(current.email);
           setJobs(library);
         }
       })
       .catch(() => {
-        if (!disposed) setError("The OCR server is unavailable. Local editing still works.");
+        if (!disposed)
+          setError('The OCR server is unavailable. Local editing still works.');
       })
       .finally(() => {
         if (!disposed) setChecking(false);
@@ -74,10 +81,11 @@ export function OcrLibrary({
     let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
       try {
-        const result = (await (await api("/jobs")).json()) as OcrJob[];
+        const result = (await (await api('/jobs')).json()) as OcrJob[];
         if (!disposed) setJobs(result);
       } catch (e) {
-        if (!disposed) setError(e instanceof Error ? e.message : "Could not refresh jobs.");
+        if (!disposed)
+          setError(e instanceof Error ? e.message : 'Could not refresh jobs.');
       } finally {
         if (!disposed) timer = setTimeout(poll, 3000);
       }
@@ -93,12 +101,12 @@ export function OcrLibrary({
     if (locked.current) return;
     locked.current = true;
     setBusy(true);
-    setError("");
-    setNotice("");
+    setError('');
+    setNotice('');
     try {
       await action();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The operation failed.");
+      setError(e instanceof Error ? e.message : 'The operation failed.');
     } finally {
       locked.current = false;
       setBusy(false);
@@ -112,11 +120,11 @@ export function OcrLibrary({
         disabled={disabled}
         onClick={() => {
           setChecking(true);
-          setError("");
+          setError('');
           setOpen(true);
         }}
       >
-        Make Scanned PDF searchable
+        {triggerLabel}
       </Button>
       <Dialog
         open={open}
@@ -128,8 +136,8 @@ export function OcrLibrary({
           <DialogHeader>
             <DialogTitle>Searchable PDF &amp; library</DialogTitle>
             <DialogDescription>
-              Local editing needs no account. Upload an edited copy here to recognize English text
-              and save a searchable PDF on the server.
+              Local editing needs no account. Upload an edited copy here to
+              recognize English text and save a searchable PDF on the server.
             </DialogDescription>
           </DialogHeader>
           {checking ? (
@@ -141,10 +149,10 @@ export function OcrLibrary({
                 event.preventDefault();
                 void perform(async () => {
                   const result = (await (
-                    await api("/auth/" + (register ? "register" : "login"), {
-                      method: "POST",
+                    await api('/auth/' + (register ? 'register' : 'login'), {
+                      method: 'POST',
                       headers: {
-                        "Content-Type": "application/json",
+                        'Content-Type': 'application/json',
                       },
                       body: JSON.stringify({
                         email,
@@ -153,7 +161,7 @@ export function OcrLibrary({
                     })
                   ).json()) as { email: string };
                   setAccount(result.email);
-                  setPassword("");
+                  setPassword('');
                   await refresh();
                 });
               }}
@@ -173,7 +181,7 @@ export function OcrLibrary({
                 Password
                 <input
                   type="password"
-                  autoComplete={register ? "new-password" : "current-password"}
+                  autoComplete={register ? 'new-password' : 'current-password'}
                   required
                   minLength={10}
                   maxLength={128}
@@ -183,7 +191,11 @@ export function OcrLibrary({
               </label>
               <p className="muted">Use 10–128 characters for your password.</p>
               <Button type="submit" disabled={busy}>
-                {busy ? "Please wait…" : register ? "Create account" : "Sign in"}
+                {busy
+                  ? 'Please wait…'
+                  : register
+                    ? 'Create account'
+                    : 'Sign in'}
               </Button>
               <Button
                 type="button"
@@ -191,7 +203,9 @@ export function OcrLibrary({
                 disabled={busy}
                 onClick={() => setRegister(!register)}
               >
-                {register ? "Already have an account? Sign in" : "Create an account"}
+                {register
+                  ? 'Already have an account? Sign in'
+                  : 'Create an account'}
               </Button>
             </form>
           ) : (
@@ -203,8 +217,8 @@ export function OcrLibrary({
                   disabled={busy}
                   onClick={() =>
                     void perform(async () => {
-                      await api("/auth/logout", {
-                        method: "POST",
+                      await api('/auth/logout', {
+                        method: 'POST',
                       });
                       setAccount(null);
                       setJobs([]);
@@ -224,33 +238,42 @@ export function OcrLibrary({
                 />
               </label>
               <p className="muted">
-                Includes your current edits. OCR rasterizes pages and may misread text. Files remain
-                in your account until deleted. Up to 40 MB, 200 pages, and 10 saved jobs.
+                Includes your current edits. OCR rasterizes pages and may
+                misread text. Files remain in your account until deleted. Up to
+                40 MB, 200 pages, and 10 saved jobs.
               </p>
               <Button
                 disabled={busy || !pages.length || jobs.length >= 10}
                 onClick={() =>
                   void perform(async () => {
-                    const selected = parsePageRange(range, pages.length).map((i) => pages[i]);
+                    const selected = parsePageRange(range, pages.length).map(
+                      (i) => pages[i],
+                    );
                     const bytes = await exportPdf(selected);
-                    await api("/jobs?name=" + encodeURIComponent(name), {
-                      method: "POST",
+                    await api('/jobs?name=' + encodeURIComponent(name), {
+                      method: 'POST',
                       headers: {
-                        "Content-Type": "application/pdf",
+                        'Content-Type': 'application/pdf',
                       },
-                      body: new Blob([new Uint8Array(bytes)], { type: "application/pdf" }),
+                      body: new Blob([new Uint8Array(bytes)], {
+                        type: 'application/pdf',
+                      }),
                     });
                     setNotice(
-                      "Uploaded. OCR runs in the background; you can close this dialog and keep editing.",
+                      'Uploaded. OCR runs in the background; you can close this dialog and keep editing.',
                     );
                     await refresh();
                   })
                 }
               >
-                {busy ? "Please wait…" : "Upload edited PDF & start OCR"}
+                {busy ? 'Please wait…' : 'Upload edited PDF & start OCR'}
               </Button>
               <div className="ocr-jobs" aria-label="Saved OCR jobs">
-                {!jobs.length && <p className="muted">Your searchable PDFs will appear here.</p>}
+                {!jobs.length && (
+                  <p className="muted">
+                    Your searchable PDFs will appear here.
+                  </p>
+                )}
                 {jobs.map((job) => (
                   <article className="ocr-job" key={job.id}>
                     <strong>{job.name}</strong>
@@ -259,17 +282,19 @@ export function OcrLibrary({
                     </span>
                     {job.error && <p>{job.error}</p>}
                     <div className="row">
-                      {job.status === "completed" && (
+                      {job.status === 'completed' && (
                         <Button
                           variant="outline"
                           disabled={busy}
                           onClick={() =>
                             void perform(async () => {
-                              const response = await api("/jobs/" + job.id + "/download");
+                              const response = await api(
+                                '/jobs/' + job.id + '/download',
+                              );
                               download(
                                 new Uint8Array(await response.arrayBuffer()),
-                                job.name + "-searchable.pdf",
-                                "application/pdf",
+                                job.name + '-searchable.pdf',
+                                'application/pdf',
                               );
                             })
                           }
@@ -282,8 +307,8 @@ export function OcrLibrary({
                         disabled={busy}
                         onClick={() =>
                           void perform(async () => {
-                            await api("/jobs/" + job.id, {
-                              method: "DELETE",
+                            await api('/jobs/' + job.id, {
+                              method: 'DELETE',
                             });
                             await refresh();
                           })

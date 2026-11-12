@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from db import connect, initialize
 from conversion import router as conversion_router
 from unlock import router as unlock_router
+from toolkit import router as toolkit_router
 
 MAX_BYTES = 40 * 1024 * 1024
 COOKIE = "pdf_session"
@@ -31,6 +32,7 @@ async def lifespan(app):
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
 app.include_router(conversion_router)
 app.include_router(unlock_router)
+app.include_router(toolkit_router)
 
 
 @app.middleware("http")

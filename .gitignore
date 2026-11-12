@@ -12,6 +12,7 @@ work/
 **/node_modules/
 **/dist/
 **/public/pdf-assets/
+**/public/ai-assets/
 **/*.tsbuildinfo
 **/.env*
 !**/.env.example

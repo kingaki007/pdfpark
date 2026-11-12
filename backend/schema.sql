@@ -31,3 +31,18 @@ CREATE TABLE IF NOT EXISTS visitors (
   visits bigint NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS visitors_last_seen ON visitors(last_seen);
+
+-- Dormant subscription storage. No subscription/payment routes are mounted.
+CREATE TABLE IF NOT EXISTS subscription_plans (
+  id text PRIMARY KEY, name text NOT NULL, entitlements jsonb NOT NULL DEFAULT '[]'
+);
+INSERT INTO subscription_plans(id,name,entitlements)
+VALUES ('free','Free','["document-tools"]') ON CONFLICT (id) DO NOTHING;
+CREATE TABLE IF NOT EXISTS subscriptions (
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  plan_id text NOT NULL REFERENCES subscription_plans(id),
+  status text NOT NULL DEFAULT 'free' CHECK(status IN ('free','trialing','active','past_due','canceled')),
+  current_period_end timestamptz,
+  cancel_at_period_end boolean NOT NULL DEFAULT false,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
